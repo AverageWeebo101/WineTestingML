@@ -1,6 +1,6 @@
 gradio
-pandas
-numpy
-scikit-learn
-imbalanced-learn
-joblib
+pandas==2.2.2
+numpy==2.0.2
+scikit-learn==1.6.1
+imbalanced-learn==0.13.0
+joblib==1.5.1

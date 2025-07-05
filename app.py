@@ -5,7 +5,7 @@ import pickle
 import joblib
 from pickle import UnpicklingError
 
-MODEL_PATH = "wine_model.pkl"  # ensure model is placed at project root
+MODEL_PATH = "wine_model.pkl" 
 
 def load_model():
 

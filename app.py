@@ -15,7 +15,6 @@ MODEL_PATH = "wine_model.pkl"  # ensure model is placed at project root
 # Load model artifact
 # ----------------------------------------
 def load_model():
-    # Attempt loading via pickle
     try:
         with open(MODEL_PATH, "rb") as f:
             model = pickle.load(f)
@@ -23,14 +22,13 @@ def load_model():
     except FileNotFoundError:
         raise FileNotFoundError(f"Model file not found at '{MODEL_PATH}'.")
     except (UnpicklingError, ModuleNotFoundError) as e:
-        # Fallback to joblib if pickle fails due to missing module or invalid pickle
         try:
             model = joblib.load(MODEL_PATH)
             return model
         except Exception:
             raise ImportError(
                 f"Failed to load model with pickle ({e}).\n"
-                "Try re-saving your trained model using joblib or Python's cloudpickle to capture custom objects."
+                "Try re-saving your trained model using joblib or cloudpickle to capture custom Pipeline objects."
             )
     except ImportError as e:
         raise ImportError(
@@ -71,25 +69,28 @@ description = (
     "Enter the chemical properties of a red wine sample to predict if it's 'Good Quality' (rating ≥7) or 'Not Good' (<7)."
 )
 
+inputs = [
+    gr.Number(value=7.4, label="Fixed Acidity"),
+    gr.Number(value=0.70, label="Volatile Acidity"),
+    gr.Number(value=0.00, label="Citric Acid"),
+    gr.Number(value=1.9, label="Residual Sugar"),
+    gr.Number(value=0.076, label="Chlorides"),
+    gr.Number(value=11.0, label="Free Sulfur Dioxide"),
+    gr.Number(value=34.0, label="Total Sulfur Dioxide"),
+    gr.Number(value=0.9978, label="Density"),
+    gr.Number(value=3.51, label="pH"),
+    gr.Number(value=0.56, label="Sulphates"),
+    gr.Number(value=9.4, label="Alcohol")
+]
+outputs = [
+    gr.Textbox(label="Prediction Result"),
+    gr.Textbox(label="Confidence Score")
+]
+
 demo = gr.Interface(
     fn=predict_quality,
-    inputs=[
-        gr.inputs.Number(default=7.4, label="Fixed Acidity"),
-        gr.inputs.Number(default=0.70, label="Volatile Acidity"),
-        gr.inputs.Number(default=0.00, label="Citric Acid"),
-        gr.inputs.Number(default=1.9, label="Residual Sugar"),
-        gr.inputs.Number(default=0.076, label="Chlorides"),
-        gr.inputs.Number(default=11.0, label="Free Sulfur Dioxide"),
-        gr.inputs.Number(default=34.0, label="Total Sulfur Dioxide"),
-        gr.inputs.Number(default=0.9978, label="Density"),
-        gr.inputs.Number(default=3.51, label="pH"),
-        gr.inputs.Number(default=0.56, label="Sulphates"),
-        gr.inputs.Number(default=9.4, label="Alcohol")
-    ],
-    outputs=[
-        gr.outputs.Textbox(label="Prediction Result"),
-        gr.outputs.Textbox(label="Confidence Score")
-    ],
+    inputs=inputs,
+    outputs=outputs,
     title=title,
     description=description,
     examples=[

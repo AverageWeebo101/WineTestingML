@@ -54,7 +54,6 @@ ALL_FEATURES = RAW_FEATURES + ENGINEERED_FEATURES
 
 
 def build_input_df(inputs_dict):
-    # Compute engineered features
     inputs_dict['acidity_balance'] = (
         inputs_dict['fixed_acidity'] / (inputs_dict['volatile_acidity'] + 1e-6)
     )
@@ -64,10 +63,7 @@ def build_input_df(inputs_dict):
     inputs_dict['alcohol_sulphates'] = (
         inputs_dict['alcohol'] * inputs_dict['sulphates']
     )
-    # Create DataFrame with underscore-named columns
     df = pd.DataFrame([{k: inputs_dict[k] for k in ALL_FEATURES}])
-    # Rename columns to match pipeline (spaces instead of underscores)
-    df.columns = [col.replace('_', ' ') for col in df.columns]
     return df
 
 

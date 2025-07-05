@@ -44,15 +44,14 @@ model = load_model()
 # ----------------------------------------
 # Prediction function including feature engineering
 # ----------------------------------------
-# Define raw feature names (underscored) and engineered feature names
 RAW_FEATURES = [
     'fixed_acidity', 'volatile_acidity', 'citric_acid', 'residual_sugar',
     'chlorides', 'free_sulfur_dioxide', 'total_sulfur_dioxide',
     'density', 'pH', 'sulphates', 'alcohol'
 ]
 ENGINEERED_FEATURES = ['acidity_balance', 'sulfur_ratio', 'alcohol_sulphates']
-
 ALL_FEATURES = RAW_FEATURES + ENGINEERED_FEATURES
+
 
 def build_input_df(inputs_dict):
     # Compute engineered features
@@ -65,8 +64,10 @@ def build_input_df(inputs_dict):
     inputs_dict['alcohol_sulphates'] = (
         inputs_dict['alcohol'] * inputs_dict['sulphates']
     )
-    # Build DataFrame with underscore-named columns
+    # Create DataFrame with underscore-named columns
     df = pd.DataFrame([{k: inputs_dict[k] for k in ALL_FEATURES}])
+    # Rename columns to match pipeline (spaces instead of underscores)
+    df.columns = [col.replace('_', ' ') for col in df.columns]
     return df
 
 

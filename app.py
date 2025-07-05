@@ -1,6 +1,5 @@
 import gradio as gr
 import pandas as pd
-import numpy as np
 import pickle
 import joblib
 from pickle import UnpicklingError
@@ -18,7 +17,6 @@ def load_model():
     try:
         with open(MODEL_PATH, "rb") as f:
             obj = pickle.load(f)
-        # Extract model if wrapped in dict
         if isinstance(obj, dict) and 'model' in obj:
             return obj['model']
         return obj
@@ -44,26 +42,42 @@ def load_model():
 model = load_model()
 
 # ----------------------------------------
-# Prediction function
+# Prediction function using DataFrame
 # ----------------------------------------
+FEATURE_ORDER = [
+    'fixed_acidity', 'volatile_acidity', 'citric_acid', 'residual_sugar',
+    'chlorides', 'free_sulfur_dioxide', 'total_sulfur_dioxide',
+    'density', 'pH', 'sulphates', 'alcohol'
+]
+
 def predict_quality(
     fixed_acidity, volatile_acidity, citric_acid, residual_sugar,
     chlorides, free_sulfur_dioxide, total_sulfur_dioxide,
     density, pH, sulphates, alcohol
 ):
-    inputs = np.array([[
-        fixed_acidity, volatile_acidity, citric_acid, residual_sugar,
-        chlorides, free_sulfur_dioxide, total_sulfur_dioxide,
-        density, pH, sulphates, alcohol
-    ]])
+    # Build a DataFrame so ColumnTransformer picks correct features
+    data = {
+        'fixed_acidity': fixed_acidity,
+        'volatile_acidity': volatile_acidity,
+        'citric_acid': citric_acid,
+        'residual_sugar': residual_sugar,
+        'chlorides': chlorides,
+        'free_sulfur_dioxide': free_sulfur_dioxide,
+        'total_sulfur_dioxide': total_sulfur_dioxide,
+        'density': density,
+        'pH': pH,
+        'sulphates': sulphates,
+        'alcohol': alcohol
+    }
+    df = pd.DataFrame([data], columns=FEATURE_ORDER)
     try:
-        pred = model.predict(inputs)[0]
-        proba = model.predict_proba(inputs)[0]
+        pred = model.predict(df)[0]
+        proba = model.predict_proba(df)[0]
     except Exception as e:
         return f"Error during prediction: {e}", None
 
     label = 'Good Quality' if pred == 1 else 'Not Good'
-    confidence = np.max(proba)
+    confidence = proba[pred]
     return label, f"{confidence:.2%}"
 
 # ----------------------------------------
@@ -73,7 +87,6 @@ title = "Boutique Winery Wine Quality Predictor"
 description = (
     "Enter the chemical properties of a red wine sample to predict if it's 'Good Quality' (rating ≥7) or 'Not Good' (<7)."
 )
-
 inputs = [
     gr.Number(value=7.4, label="Fixed Acidity"),
     gr.Number(value=0.70, label="Volatile Acidity"),
@@ -91,8 +104,7 @@ outputs = [
     gr.Textbox(label="Prediction Result"),
     gr.Textbox(label="Confidence Score")
 ]
-
-# Examples as list of lists matching inputs order
+# Example formatted to show values in table
 examples = [
     [7.4, 0.70, 0.00, 1.9, 0.076, 11.0, 34.0, 0.9978, 3.51, 0.56, 9.4]
 ]

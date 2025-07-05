@@ -4,8 +4,9 @@ import numpy as np
 import pickle
 import joblib
 from pickle import UnpicklingError
+from sklearn.pipeline import Pipeline  
 
-MODEL_PATH = "wine_model.pkl" 
+MODEL_PATH = "wine_model.pkl"  
 
 def load_model():
 
@@ -24,10 +25,10 @@ def load_model():
             raise ValueError(
                 "Invalid model file format. Ensure it's a valid pickle or joblib file without special characters in its name."
             )
-    except ImportError:
+    except ImportError as e:
         raise ImportError(
-            "Dependency import failed when loading the model."
-            "Ensure the same package versions used during training are installed."
+            f"Dependency import failed when loading the model: {e}.\n"
+            "Ensure the same package versions used during training (e.g. scikit-learn==1.6.1) are installed."
         )
 
 model = load_model()

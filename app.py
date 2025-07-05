@@ -3,12 +3,12 @@ import pandas as pd
 import pickle
 import joblib
 from pickle import UnpicklingError
-from sklearn.pipeline import Pipeline  # ensure Pipeline class is available for unpickling
+from sklearn.pipeline import Pipeline
 
 # ----------------------------------------
 # Configuration / Paths
 # ----------------------------------------
-MODEL_PATH = "wine_model.pkl"  # ensure model is placed at project root
+MODEL_PATH = "wine_model.pkl"
 
 # ----------------------------------------
 # Load model artifact
@@ -42,30 +42,36 @@ def load_model():
 model = load_model()
 
 # ----------------------------------------
-# Prediction function including feature engineering
+# Prediction function with correct feature names
 # ----------------------------------------
-RAW_FEATURES = [
-    'fixed_acidity', 'volatile_acidity', 'citric_acid', 'residual_sugar',
-    'chlorides', 'free_sulfur_dioxide', 'total_sulfur_dioxide',
-    'density', 'pH', 'sulphates', 'alcohol'
+# Features expected by the model (exact names from training)
+MODEL_FEATURES = [
+    'alcohol',
+    'sulphates',
+    'chlorides',
+    'volatile acidity',  # Note: space instead of underscore
+    'acidity_balance',
+    'sulfur_ratio',
+    'alcohol_sulphates'
 ]
-ENGINEERED_FEATURES = ['acidity_balance', 'sulfur_ratio', 'alcohol_sulphates']
-ALL_FEATURES = RAW_FEATURES + ENGINEERED_FEATURES
-
 
 def build_input_df(inputs_dict):
-    inputs_dict['acidity_balance'] = (
-        inputs_dict['fixed_acidity'] / (inputs_dict['volatile_acidity'] + 1e-6)
-    )
-    inputs_dict['sulfur_ratio'] = (
-        inputs_dict['free_sulfur_dioxide'] / (inputs_dict['total_sulfur_dioxide'] + 1e-6)
-    )
-    inputs_dict['alcohol_sulphates'] = (
-        inputs_dict['alcohol'] * inputs_dict['sulphates']
-    )
-    df = pd.DataFrame([{k: inputs_dict[k] for k in ALL_FEATURES}])
-    return df
-
+    # Compute engineered features
+    acidity_balance = inputs_dict['citric_acid'] / (inputs_dict['volatile_acidity'] + 1e-6)
+    sulfur_ratio = inputs_dict['free_sulfur_dioxide'] / (inputs_dict['total_sulfur_dioxide'] + 1e-6)
+    alcohol_sulphates = inputs_dict['alcohol'] * inputs_dict['sulphates']
+    
+    # Create dictionary with EXACT feature names from training
+    model_input = {
+        'alcohol': inputs_dict['alcohol'],
+        'sulphates': inputs_dict['sulphates'],
+        'chlorides': inputs_dict['chlorides'],
+        'volatile acidity': inputs_dict['volatile_acidity'],  # Space-separated name
+        'acidity_balance': acidity_balance,
+        'sulfur_ratio': sulfur_ratio,
+        'alcohol_sulphates': alcohol_sulphates
+    }
+    return pd.DataFrame([model_input])
 
 def predict_quality(
     fixed_acidity, volatile_acidity, citric_acid, residual_sugar,
@@ -96,7 +102,7 @@ def predict_quality(
     return label, f"{confidence:.2%}"
 
 # ----------------------------------------
-# Gradio Interface
+# Gradio Interface (unchanged)
 # ----------------------------------------
 title = "Boutique Winery Wine Quality Predictor"
 description = (

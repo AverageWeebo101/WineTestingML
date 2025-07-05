@@ -5,14 +5,8 @@ import joblib
 from pickle import UnpicklingError
 from sklearn.pipeline import Pipeline
 
-# ----------------------------------------
-# Configuration / Paths
-# ----------------------------------------
 MODEL_PATH = "wine_model.pkl"
 
-# ----------------------------------------
-# Load model artifact
-# ----------------------------------------
 def load_model():
     try:
         with open(MODEL_PATH, "rb") as f:
@@ -41,32 +35,27 @@ def load_model():
 
 model = load_model()
 
-# ----------------------------------------
-# Prediction function with correct feature names
-# ----------------------------------------
-# Features expected by the model (exact names from training)
 MODEL_FEATURES = [
     'alcohol',
     'sulphates',
     'chlorides',
-    'volatile acidity',  # Note: space instead of underscore
+    'volatile acidity',  
     'acidity_balance',
     'sulfur_ratio',
     'alcohol_sulphates'
 ]
 
 def build_input_df(inputs_dict):
-    # Compute engineered features
+
     acidity_balance = inputs_dict['citric_acid'] / (inputs_dict['volatile_acidity'] + 1e-6)
     sulfur_ratio = inputs_dict['free_sulfur_dioxide'] / (inputs_dict['total_sulfur_dioxide'] + 1e-6)
     alcohol_sulphates = inputs_dict['alcohol'] * inputs_dict['sulphates']
     
-    # Create dictionary with EXACT feature names from training
     model_input = {
         'alcohol': inputs_dict['alcohol'],
         'sulphates': inputs_dict['sulphates'],
         'chlorides': inputs_dict['chlorides'],
-        'volatile acidity': inputs_dict['volatile_acidity'],  # Space-separated name
+        'volatile acidity': inputs_dict['volatile_acidity'], 
         'acidity_balance': acidity_balance,
         'sulfur_ratio': sulfur_ratio,
         'alcohol_sulphates': alcohol_sulphates
@@ -101,9 +90,6 @@ def predict_quality(
     confidence = proba[pred]
     return label, f"{confidence:.2%}"
 
-# ----------------------------------------
-# Gradio Interface (unchanged)
-# ----------------------------------------
 title = "Boutique Winery Wine Quality Predictor"
 description = (
     "Enter the chemical properties of a red wine sample to predict if it's 'Good Quality' (rating ≥7) or 'Not Good' (<7)."
@@ -125,7 +111,11 @@ outputs = [
     gr.Textbox(label="Prediction Result"),
     gr.Textbox(label="Confidence Score")
 ]
-examples = [[7.4, 0.70, 0.00, 1.9, 0.076, 11.0, 34.0, 0.9978, 3.51, 0.56, 9.4]]
+examples = [
+    [7.4, 0.70, 0.00, 1.9, 0.076, 11.0, 34.0, 0.9978, 3.51, 0.56, 9.4],  # Not Good
+    [10.3, 0.32, 0.45, 6.4, 0.073, 5, 13, 0.9976, 3.23, 0.82, 12.6],      # Good
+    [8.5, 0.40, 0.30, 2.5, 0.065, 15, 35, 0.995, 3.30, 0.75, 12.0]        # Good
+]
 
 demo = gr.Interface(
     fn=predict_quality,
@@ -134,7 +124,7 @@ demo = gr.Interface(
     title=title,
     description=description,
     examples=examples,
-    examples_per_page=1
+    examples_per_page=3
 )
 
 if __name__ == "__main__":
